@@ -1,14 +1,14 @@
-"use strict";
-
 /*!
- * "nbt-lint" NBT Text Library v1.0.0 | MIT License
- * https://github.com/AjaxGb/NBTLint
+ * "snbt.js" SNBT Parsing Library v1.0.0 | MIT License
+ * https://github.com/AjaxGb/SNBT
  */
 
 (function() {
-var root = this, previous_nbtlint = root.nbtlint;
+"use strict";
 
-var nbtlint = {
+var root = this, previousSNBT = root.SNBT;
+
+var SNBT = {
 	TagBase: function() {},
 	quotedCharRE: /[^a-zA-Z0-9._+\-]/,
 	/**
@@ -20,11 +20,11 @@ var nbtlint = {
 	TagString: function(value, isKey) {
 		this.value = value;
 		this.isKey = !!isKey;
-		this.needQuotes = nbtlint.quotedCharRE.test(value);
+		this.needQuotes = SNBT.quotedCharRE.test(value);
 		if (!this.needQuotes && !isKey) {
 			var num;
 			try {
-				num = nbtlint._Parser.parseNumber(value);
+				num = SNBT._Parser.parseNumber(value);
 			} catch (e) {
 				return;
 			}
@@ -48,7 +48,7 @@ var nbtlint = {
 	 * @param {number} value - The tag's value. Must be a whole number (not enforced).
 	 */
 	TagByte: function(value) {
-		nbtlint.TagNumberBase.call(this, value);
+		SNBT.TagNumberBase.call(this, value);
 	},
 	/**
 	 * An NBT Short tag
@@ -56,7 +56,7 @@ var nbtlint = {
 	 * @param {number} value - The tag's value. Must be a whole number (not enforced).
 	 */
 	TagShort: function(value) {
-		nbtlint.TagNumberBase.call(this, value);
+		SNBT.TagNumberBase.call(this, value);
 	},
 	/**
 	 * An NBT Integer tag
@@ -64,7 +64,7 @@ var nbtlint = {
 	 * @param {number} value - The tag's value. Must be a whole number (not enforced).
 	 */
 	TagInteger: function(value) {
-		nbtlint.TagNumberBase.call(this, value);
+		SNBT.TagNumberBase.call(this, value);
 	},
 	/**
 	 * An NBT Long tag
@@ -80,8 +80,8 @@ var nbtlint = {
 		if (value === "0") return this.value = 0;
 		if (!/^[1-9][0-9]*$/.test(value)) throw {error: "invalid_format", message: "Badly formatted TagLong string"};
 		if (value.length > 19) {
-			if (sign === "-") throw {error: "value_too_low", type: nbtlint.TagLong, min: this.minValue};
-			throw {error: "value_too_high", type: nbtlint.TagLong, max: this.maxValue};
+			if (sign === "-") throw {error: "value_too_low", type: SNBT.TagLong, min: this.minValue};
+			throw {error: "value_too_high", type: SNBT.TagLong, max: this.maxValue};
 		}
 		if (value.length < 19) {
 			if (sign === "-") return this.value = sign + value;
@@ -92,8 +92,8 @@ var nbtlint = {
 		for (var i = 0; i < limit.length; ++i) {
 			if (value[i] !== limit[i]) {
 				if (value[i] < limit[i]) break;
-				if (sign === "-") throw {error: "value_too_low", type: nbtlint.TagLong, min: this.minValue};
-				throw {error: "value_too_high", type: nbtlint.TagLong, max: this.maxValue};
+				if (sign === "-") throw {error: "value_too_low", type: SNBT.TagLong, min: this.minValue};
+				throw {error: "value_too_high", type: SNBT.TagLong, max: this.maxValue};
 			}
 		}
 		
@@ -153,7 +153,7 @@ var nbtlint = {
 	 * @param {TagByte[]} [values] - An array of TagBytes to insert into the array.
 	 */
 	TagArrayByte: function(values) {
-		nbtlint.TagList.call(this, nbtlint.TagByte, values);
+		SNBT.TagList.call(this, SNBT.TagByte, values);
 	},
 	/**
 	 * An NBT Int Array tag
@@ -161,7 +161,7 @@ var nbtlint = {
 	 * @param {TagInteger[]} [values] - An array of TagIntegers to insert into the array.
 	 */
 	TagArrayInt: function(values) {
-		nbtlint.TagList.call(this, nbtlint.TagInteger, values);
+		SNBT.TagList.call(this, SNBT.TagInteger, values);
 	},
 	/**
 	 * An NBT Long Array tag
@@ -169,7 +169,7 @@ var nbtlint = {
 	 * @param {TagLong[]} [values] - An array of TagLongs to insert into the array.
 	 */
 	TagArrayLong: function(values) {
-		nbtlint.TagList.call(this, nbtlint.TagLong, values);
+		SNBT.TagList.call(this, SNBT.TagLong, values);
 	},
 	/**
 	 * Convert a TagBase to a textual representation
@@ -182,7 +182,7 @@ var nbtlint = {
 	 * @param {boolean}  [options.expandPrimitives=false] - Put each item in a list of primitives on its own line, like other lists.
 	 * @param {boolean}  [options.trailingComma=false]    - Add a trailing comma immediately before newlines, when valid.
 	 * @param {Function} [options.sort=undefined]         - A sorting function to use on compound key-value pairs.
-	 *                                                      Recommended: nbtlint.compareAlpha, nbtlint.compareType, nbtlint.compareTypeAlpha.
+	 *                                                      Recommended: SNBT.compareAlpha, SNBT.compareType, SNBT.compareTypeAlpha.
 	 * @param {boolean}  [options.quoteKeys=false]        - Force all keys to be quoted.
 	 * @param {boolean}  [options.unquoteStrings=false]   - Avoid quoting non-key strings when possible.
 	 * @param {boolean}  [options.deflate=false]          - Remove all unnecessary whitespace in the result.
@@ -195,7 +195,7 @@ var nbtlint = {
 		if (space == null) space = "\t";
 		options = options || {};
 		options.capitalizeSuffix = options.capitalizeSuffix || {};
-		return nbtlint._printValue(value, space, "", false, options);
+		return SNBT._printValue(value, space, "", false, options);
 	},
 	/**
 	 * Parse the textual representation of an NBT Tag.
@@ -203,7 +203,7 @@ var nbtlint = {
 	 * @returns {TagBase} - The parsed Tag.
 	 */
 	parse: function(value) {
-		return nbtlint._Parser.parse(value);
+		return SNBT._Parser.parse(value);
 	},
 	/**
 	 * Compare two key-value compound member pairs alphabetically.
@@ -231,7 +231,7 @@ var nbtlint = {
 		    orderB = b[1].sortOrder;
 		if (orderA < orderB) return -1;
 		if (orderA > orderB) return  1;
-		if (a[1].constructor !== nbtlint.TagList) return 0;
+		if (a[1].constructor !== SNBT.TagList) return 0;
 		orderA = a[1].type.prototype.sortOrder;
 		orderB = b[1].type.prototype.sortOrder;
 		if (orderA < orderB) return -1;
@@ -245,7 +245,7 @@ var nbtlint = {
 	 * @returns {number} - The result of the comparison.
 	 */
 	compareTypeAlpha: function(a, b) {
-		return nbtlint.compareType(a, b) || nbtlint.compareAlpha(a, b);
+		return SNBT.compareType(a, b) || SNBT.compareAlpha(a, b);
 	},
 	/**
 	 * Sort a list while ensuring that items which compare equal stay in the same order relative to each other.
@@ -268,24 +268,24 @@ var nbtlint = {
 	_printValue: function(value, space, indent, hasName, options) {
 		var str;
 		switch (value.constructor) {
-		case nbtlint.TagString:
-			str = nbtlint._printString(value, options);
+		case SNBT.TagString:
+			str = SNBT._printString(value, options);
 			break;
-		case nbtlint.TagByte:
-		case nbtlint.TagShort:
-		case nbtlint.TagInteger:
-		case nbtlint.TagLong:
-		case nbtlint.TagFloat:
-		case nbtlint.TagDouble:
-			str = nbtlint._printNumber(value, options);
+		case SNBT.TagByte:
+		case SNBT.TagShort:
+		case SNBT.TagInteger:
+		case SNBT.TagLong:
+		case SNBT.TagFloat:
+		case SNBT.TagDouble:
+			str = SNBT._printNumber(value, options);
 			break;
-		case nbtlint.TagCompound:
-			return nbtlint._printCompound(value, space, indent, hasName, options);
-		case nbtlint.TagList:
-		case nbtlint.TagArrayByte:
-		case nbtlint.TagArrayInt:
-		case nbtlint.TagArrayLong:
-			return nbtlint._printList(value, space, indent, hasName, options);
+		case SNBT.TagCompound:
+			return SNBT._printCompound(value, space, indent, hasName, options);
+		case SNBT.TagList:
+		case SNBT.TagArrayByte:
+		case SNBT.TagArrayInt:
+		case SNBT.TagArrayLong:
+			return SNBT._printList(value, space, indent, hasName, options);
 		}
 		if (hasName && !options.deflate) str = " " + str;
 		return str;
@@ -324,12 +324,12 @@ var nbtlint = {
 			str = "{\n";
 		}
 		if (options.sort) {
-			list = nbtlint.stableSorted(list, options.sort);
+			list = SNBT.stableSorted(list, options.sort);
 		}
 		for (i = 0; i < l; ++i) {
 			if (!options.deflate) str += indent;
-			str += nbtlint._printString(list[i][0], options) + ":";
-			str += nbtlint._printValue(list[i][1], space, indent, true, options);
+			str += SNBT._printString(list[i][0], options) + ":";
+			str += SNBT._printValue(list[i][1], space, indent, true, options);
 			if (i !== l - 1) {
 				str += options.deflate ? "," : ",\n";
 			} else if (!options.deflate) {
@@ -349,7 +349,7 @@ var nbtlint = {
 			str = (options.deflate ? "[" : " [") + value.arrayPrefix;
 			if (value.arrayPrefix && !options.deflate) str += " ";
 			for (i = 0; i < l; ++i) {
-				str += nbtlint._printValue(value.list[i], "", "", false, options)
+				str += SNBT._printValue(value.list[i], "", "", false, options)
 				if (i !== l - 1) str += (options.deflate ? "," : ", ");
 			}
 			return str + "]";
@@ -375,7 +375,7 @@ var nbtlint = {
 		}
 		for (i = 0; i < l; ++i) {
 			if (!(options.deflate || i === 0 && collapseBr)) str += indent;
-			str += nbtlint._printValue(value.list[i], space, indent, false, options);
+			str += SNBT._printValue(value.list[i], space, indent, false, options);
 			if (i !== l - 1) {
 				str += options.deflate ? "," : ",\n";
 			} else if (!(collapseBr || options.deflate)) {
@@ -456,7 +456,7 @@ var nbtlint = {
 		},
 		readCompound: function() {
 			this.expect("{");
-			var compound = new nbtlint.TagCompound();
+			var compound = new SNBT.TagCompound();
 			this.skipWhitespace();
 			
 			while (this.canRead() && this.peek() != "}") {
@@ -497,18 +497,18 @@ var nbtlint = {
 					this.readArrayTag() : this.readListTag();
 			case '"':
 			case "'":
-				return new nbtlint.TagString(this.readQuotedString(), false);
+				return new SNBT.TagString(this.readQuotedString(), false);
 			}
 			var s = this.readUnquotedString(), num;
 			if (!s) throw this.exception("Expected a value");
 			try {
 				num = this.parseNumber(s);
 			} catch (e) {
-				s = new nbtlint.TagString(s, false);
+				s = new SNBT.TagString(s, false);
 				s.limitErr = e;
 				return s;
 			}
-			return num || new nbtlint.TagString(s, false);
+			return num || new SNBT.TagString(s, false);
 		},
 		readArrayTag: function() {
 			this.expect("[");
@@ -519,13 +519,13 @@ var nbtlint = {
 			if (!this.canRead()) throw this.exception("Expected a value");
 			switch (type) {
 			case "B":
-				array = new nbtlint.TagArrayByte();
+				array = new SNBT.TagArrayByte();
 				break;
 			case "L":
-				array = new nbtlint.TagArrayLong();
+				array = new SNBT.TagArrayLong();
 				break;
 			case "I":
-				array = new nbtlint.TagArrayInt();
+				array = new SNBT.TagArrayInt();
 				break;
 			default:
 				throw this.exception("Invalid array type '" + type + "' found");
@@ -559,7 +559,7 @@ var nbtlint = {
 			if (!this.canRead()) {
 				throw this.exception("Expected a value");
 			} else {
-				var list = new nbtlint.TagList();
+				var list = new SNBT.TagList();
 				
 				while (this.peek() !== "]") {
 					var val = this.readValue();
@@ -613,32 +613,32 @@ var nbtlint = {
 		longRE:        /^([-+])?(?:0|[1-9][0-9]*)l$/i,
 		parseNumber: function(s) {
 			if (this.floatRE.test(s)) {
-				return new nbtlint.TagFloat(+s.substr(0, s.length - 1));
+				return new SNBT.TagFloat(+s.substr(0, s.length - 1));
 			}
 			if (this.byteRE.test(s)) {
-				return new nbtlint.TagByte(+s.substring(0, s.length - 1));
+				return new SNBT.TagByte(+s.substring(0, s.length - 1));
 			}
 			if (this.longRE.test(s)) {
 				// As a string
-				return new nbtlint.TagLong(s.substring(0, s.length - 1));
+				return new SNBT.TagLong(s.substring(0, s.length - 1));
 			}
 			if (this.shortRE.test(s)) {
-				return new nbtlint.TagShort(+s.substring(0, s.length - 1));
+				return new SNBT.TagShort(+s.substring(0, s.length - 1));
 			}
 			if (this.integerRE.test(s)) {
-				return new nbtlint.TagInteger(+s);
+				return new SNBT.TagInteger(+s);
 			}
 			if (this.doubleRE.test(s)) {
-				return new nbtlint.TagDouble(+s.substring(0, s.length - 1));
+				return new SNBT.TagDouble(+s.substring(0, s.length - 1));
 			}
 			if (this.doubleNoSufRE.test(s)) {
-				return new nbtlint.TagDouble(+s);
+				return new SNBT.TagDouble(+s);
 			}
 			if (s.toLowerCase() === "true") {
-				return new nbtlint.TagByte(1);
+				return new SNBT.TagByte(1);
 			}
 			if (s.toLowerCase() === "false") {
-				return new nbtlint.TagByte(0);
+				return new SNBT.TagByte(0);
 			}
 		}
 	},
@@ -650,119 +650,119 @@ function extend(parent, children) {
 		children[i].prototype.constructor = children[i];
 	}
 }
-extend(nbtlint.TagBase, [
-	nbtlint.TagString,
-	nbtlint.TagCompound,
-	nbtlint.TagList,
-	nbtlint.TagNumberBase,
+extend(SNBT.TagBase, [
+	SNBT.TagString,
+	SNBT.TagCompound,
+	SNBT.TagList,
+	SNBT.TagNumberBase,
 ]);
-extend(nbtlint.TagList, [
-	nbtlint.TagArrayByte,
-	nbtlint.TagArrayInt,
-	nbtlint.TagArrayLong,
+extend(SNBT.TagList, [
+	SNBT.TagArrayByte,
+	SNBT.TagArrayInt,
+	SNBT.TagArrayLong,
 ]);
-extend(nbtlint.TagNumberBase, [
-	nbtlint.TagByte,
-	nbtlint.TagShort,
-	nbtlint.TagInteger,
-	nbtlint.TagLong,
-	nbtlint.TagFloat,
-	nbtlint.TagDouble,
+extend(SNBT.TagNumberBase, [
+	SNBT.TagByte,
+	SNBT.TagShort,
+	SNBT.TagInteger,
+	SNBT.TagLong,
+	SNBT.TagFloat,
+	SNBT.TagDouble,
 ]);
 
-nbtlint.byID = {
-	 1: nbtlint.TagByte,
-	 2: nbtlint.TagShort,
-	 3: nbtlint.TagInteger,
-	 4: nbtlint.TagLong,
-	 5: nbtlint.TagFloat,
-	 6: nbtlint.TagDouble,
-	 7: nbtlint.TagArrayByte,
-	 8: nbtlint.TagString,
-	 9: nbtlint.TagList,
-	10: nbtlint.TagCompound,
-	11: nbtlint.TagArrayInt,
-	12: nbtlint.TagArrayLong,
+SNBT.byID = {
+	 1: SNBT.TagByte,
+	 2: SNBT.TagShort,
+	 3: SNBT.TagInteger,
+	 4: SNBT.TagLong,
+	 5: SNBT.TagFloat,
+	 6: SNBT.TagDouble,
+	 7: SNBT.TagArrayByte,
+	 8: SNBT.TagString,
+	 9: SNBT.TagList,
+	10: SNBT.TagCompound,
+	11: SNBT.TagArrayInt,
+	12: SNBT.TagArrayLong,
 };
-for (var id in nbtlint.byID) {
-	nbtlint.byID[id].prototype.tagID = id|0;
+for (var id in SNBT.byID) {
+	SNBT.byID[id].prototype.tagID = id|0;
 }
-nbtlint.TagByte.prototype.tagName      = "TAG_Byte";
-nbtlint.TagShort.prototype.tagName     = "TAG_Short";
-nbtlint.TagInteger.prototype.tagName   = "TAG_Int";
-nbtlint.TagLong.prototype.tagName      = "TAG_Long";
-nbtlint.TagFloat.prototype.tagName     = "TAG_Float";
-nbtlint.TagDouble.prototype.tagName    = "TAG_Double";
-nbtlint.TagString.prototype.tagName    = "TAG_String";
-nbtlint.TagList.prototype.tagName      = "TAG_List";
-nbtlint.TagCompound.prototype.tagName  = "TAG_Compound";
-nbtlint.TagArrayByte.prototype.tagName = "TAG_Byte_Array";
-nbtlint.TagArrayInt.prototype.tagName  = "TAG_Int_Array";
-nbtlint.TagArrayLong.prototype.tagName = "TAG_Long_Array";
+SNBT.TagByte.prototype.tagName      = "TAG_Byte";
+SNBT.TagShort.prototype.tagName     = "TAG_Short";
+SNBT.TagInteger.prototype.tagName   = "TAG_Int";
+SNBT.TagLong.prototype.tagName      = "TAG_Long";
+SNBT.TagFloat.prototype.tagName     = "TAG_Float";
+SNBT.TagDouble.prototype.tagName    = "TAG_Double";
+SNBT.TagString.prototype.tagName    = "TAG_String";
+SNBT.TagList.prototype.tagName      = "TAG_List";
+SNBT.TagCompound.prototype.tagName  = "TAG_Compound";
+SNBT.TagArrayByte.prototype.tagName = "TAG_Byte_Array";
+SNBT.TagArrayInt.prototype.tagName  = "TAG_Int_Array";
+SNBT.TagArrayLong.prototype.tagName = "TAG_Long_Array";
 
-nbtlint.TagByte.prototype.suffix    = "b";
-nbtlint.TagShort.prototype.suffix   = "s";
-nbtlint.TagInteger.prototype.suffix = "";
-nbtlint.TagLong.prototype.suffix    = "l";
-nbtlint.TagFloat.prototype.suffix   = "f";
-nbtlint.TagDouble.prototype.suffix  = "d";
-nbtlint.TagList.prototype.arrayPrefix      = "";
-nbtlint.TagArrayByte.prototype.arrayPrefix = "B;";
-nbtlint.TagArrayInt.prototype.arrayPrefix  = "I;";
-nbtlint.TagArrayLong.prototype.arrayPrefix = "L;";
+SNBT.TagByte.prototype.suffix    = "b";
+SNBT.TagShort.prototype.suffix   = "s";
+SNBT.TagInteger.prototype.suffix = "";
+SNBT.TagLong.prototype.suffix    = "l";
+SNBT.TagFloat.prototype.suffix   = "f";
+SNBT.TagDouble.prototype.suffix  = "d";
+SNBT.TagList.prototype.arrayPrefix      = "";
+SNBT.TagArrayByte.prototype.arrayPrefix = "B;";
+SNBT.TagArrayInt.prototype.arrayPrefix  = "I;";
+SNBT.TagArrayLong.prototype.arrayPrefix = "L;";
 
-nbtlint.TagByte.prototype.minValue    = -128
-nbtlint.TagByte.prototype.maxValue    =  127
-nbtlint.TagShort.prototype.minValue   = -32768
-nbtlint.TagShort.prototype.maxValue   =  32767
-nbtlint.TagInteger.prototype.minValue = -2147483648
-nbtlint.TagInteger.prototype.maxValue =  2147483647
-nbtlint.TagLong.prototype.minValue    ="-9223372036854775808"
-nbtlint.TagLong.prototype.maxValue    = "9223372036854775807"
-nbtlint.TagLong.prototype.minValueSignless = "9223372036854775808"
-nbtlint.TagDouble.prototype.minValue  = -Number.MAX_VALUE;
-nbtlint.TagDouble.prototype.maxValue  =  Number.MAX_VALUE;
+SNBT.TagByte.prototype.minValue    = -128
+SNBT.TagByte.prototype.maxValue    =  127
+SNBT.TagShort.prototype.minValue   = -32768
+SNBT.TagShort.prototype.maxValue   =  32767
+SNBT.TagInteger.prototype.minValue = -2147483648
+SNBT.TagInteger.prototype.maxValue =  2147483647
+SNBT.TagLong.prototype.minValue    ="-9223372036854775808"
+SNBT.TagLong.prototype.maxValue    = "9223372036854775807"
+SNBT.TagLong.prototype.minValueSignless = "9223372036854775808"
+SNBT.TagDouble.prototype.minValue  = -Number.MAX_VALUE;
+SNBT.TagDouble.prototype.maxValue  =  Number.MAX_VALUE;
 // Calculate max float32 value as accurately as possible
 if (typeof ArrayBuffer !== "undefined" && typeof Float32Array !== "undefined" && typeof Int32Array !== "undefined") {
 	var buf = new ArrayBuffer(4),
 		f32 = new Float32Array(buf),
 		i32 = new Int32Array(buf);
 	i32[0] = 0x7f7fffff;
-	nbtlint.TagFloat.prototype.minValue = -f32[0];
-	nbtlint.TagFloat.prototype.maxValue =  f32[0];
+	SNBT.TagFloat.prototype.minValue = -f32[0];
+	SNBT.TagFloat.prototype.maxValue =  f32[0];
 } else {
-	nbtlint.TagFloat.prototype.minValue = -3.4028234663852886e+38;
-	nbtlint.TagFloat.prototype.maxValue =  3.4028234663852886e+38;
+	SNBT.TagFloat.prototype.minValue = -3.4028234663852886e+38;
+	SNBT.TagFloat.prototype.maxValue =  3.4028234663852886e+38;
 }
 
-nbtlint.TagString.prototype.sortOrder    =  0;
-nbtlint.TagByte.prototype.sortOrder      =  1;
-nbtlint.TagShort.prototype.sortOrder     =  2;
-nbtlint.TagInteger.prototype.sortOrder   =  3;
-nbtlint.TagLong.prototype.sortOrder      =  4;
-nbtlint.TagFloat.prototype.sortOrder     =  5;
-nbtlint.TagDouble.prototype.sortOrder    =  6;
-nbtlint.TagCompound.prototype.sortOrder  =  7;
-nbtlint.TagArrayByte.prototype.sortOrder =  8;
-nbtlint.TagArrayInt.prototype.sortOrder  =  9;
-nbtlint.TagArrayLong.prototype.sortOrder = 10;
-nbtlint.TagList.prototype.sortOrder      = 11;
+SNBT.TagString.prototype.sortOrder    =  0;
+SNBT.TagByte.prototype.sortOrder      =  1;
+SNBT.TagShort.prototype.sortOrder     =  2;
+SNBT.TagInteger.prototype.sortOrder   =  3;
+SNBT.TagLong.prototype.sortOrder      =  4;
+SNBT.TagFloat.prototype.sortOrder     =  5;
+SNBT.TagDouble.prototype.sortOrder    =  6;
+SNBT.TagCompound.prototype.sortOrder  =  7;
+SNBT.TagArrayByte.prototype.sortOrder =  8;
+SNBT.TagArrayInt.prototype.sortOrder  =  9;
+SNBT.TagArrayLong.prototype.sortOrder = 10;
+SNBT.TagList.prototype.sortOrder      = 11;
 
-nbtlint.TagString.prototype.isPrimitive     = true;
-nbtlint.TagNumberBase.prototype.isPrimitive = true;
-nbtlint.TagCompound.prototype.isPrimitive   = false;
-nbtlint.TagList.prototype.isPrimitive       = false;
+SNBT.TagString.prototype.isPrimitive     = true;
+SNBT.TagNumberBase.prototype.isPrimitive = true;
+SNBT.TagCompound.prototype.isPrimitive   = false;
+SNBT.TagList.prototype.isPrimitive       = false;
 
 /**
  * Add a Tag to a Compound.
  * @param {string} key - The key of the new Tag.
  * @param {TagBase} value - The Tag to add.
  */
-nbtlint.TagCompound.prototype.add = function(key, value) {
+SNBT.TagCompound.prototype.add = function(key, value) {
 	if (key in this.map) {
-		throw {error: "duplicate_key", message: "Duplicate key: " + nbtlint._printString(new nbtlint.TagString(key, true), {})};
+		throw {error: "duplicate_key", message: "Duplicate key: " + SNBT._printString(new SNBT.TagString(key, true), {})};
 	}
-	this.pairs.push([new nbtlint.TagString(key, true), value]);
+	this.pairs.push([new SNBT.TagString(key, true), value]);
 	this.map[key] = value;
 };
 /**
@@ -770,7 +770,7 @@ nbtlint.TagCompound.prototype.add = function(key, value) {
  * @param {string} key - The key of the Tag to remove.
  * @returns {TagBase} - The Tag removed, or null if not found.
  */
-nbtlint.TagCompound.prototype.remove = function(key) {
+SNBT.TagCompound.prototype.remove = function(key) {
 	if (key in this.map) {
 		delete this.map[key];
 	} else {
@@ -787,7 +787,7 @@ nbtlint.TagCompound.prototype.remove = function(key) {
  * Add a Tag to the end of a List.
  * @param {TagBase} value - The Tag to add.
  */
-nbtlint.TagList.prototype.push = function(value) {
+SNBT.TagList.prototype.push = function(value) {
 	this.type = this.type || value.constructor;
 	if (value.constructor !== this.type) {
 		// TODO: Explain how type is determined, suggest fix
@@ -801,18 +801,18 @@ nbtlint.TagList.prototype.push = function(value) {
 // Export code //
 /////////////////
 
-nbtlint.noConflict = function() {
-	root.nbtlint = previous_nbtlint;
-	return nbtlint;
+SNBT.noConflict = function() {
+	root.SNBT = previousSNBT;
+	return SNBT;
 }
 
 if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
-		exports = module.exports = nbtlint;
+		exports = module.exports = SNBT;
 	}
-	exports.nbtlint = nbtlint;
+	exports.SNBT = SNBT;
 } else {
-	root.nbtlint = nbtlint;
+	root.SNBT = SNBT;
 }
 
 }).call(this);
