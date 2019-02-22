@@ -1,6 +1,6 @@
 /*!
- * "snbt.js" SNBT Parsing Library v1.0.0 | MIT License
- * https://github.com/AjaxGb/SNBT
+ * "SNBT.js" SNBT Parsing Library v1.0.0 | MIT License
+ * https://github.com/AjaxGb/snbt.js
  */
 
 (function() {
